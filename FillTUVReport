@@ -1,0 +1,354 @@
+'-----------------------------------------------------------------------------------'
+'   Copyright (c) 2015 Nicolas Rannou'
+''
+'   Permission is hereby granted, free of charge, to any person obtaining a copy of this software'
+'   and associated documentation files (the "Software"), to deal in the Software without restriction,'
+'   including without limitation the rights to use, copy, modify, merge, publish, distribute,'
+'   sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is '
+'   furnished to do so, subject to the following conditions:'
+''
+'   The above copyright notice and this permission notice shall be included in all copies or substantial'
+'   portions of the Software.'
+''
+'   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,'
+'   INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR'
+'   PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE'
+'   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR'
+'   OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER'
+'   DEALINGS IN THE SOFTWARE.'
+''
+'   Original Author: Nicolas Rannou'
+'   Email: npm.rannou@gmail.com'
+'-----------------------------------------------------------------------------------'
+
+Sub FillTUVReport()
+
+'Define Global Variables'
+
+'Define Report Sheet'
+Set reportSheet = Worksheets("TÜV")
+
+'Define Target References'
+Dim referencesStr As String
+referencesStr = "BCGEN712,BCGEN713,BCGEN714,NA22641,BCGEN742"
+
+'Fill first lines too'
+
+'Individual vs Average Separation row'
+Dim individualAverageSeparation As Integer
+individualAverageSeparation = 236
+
+'     '
+'Define Average Time Variables'
+'     '
+Dim averageTimeSheet As String
+averageTimeSheet = "TiempoLectura"
+
+'     '
+'Define Negative Control Variables'
+'     '
+Dim negativeControlTimeSheet As String
+negativeControlTimeSheet = "CNs"
+
+'     '
+'Define Individual Genotyping Variables'
+'     '
+Dim individualGenotypingSheet As String
+individualGenotypingSheet = "Genotipado Individual"
+
+Dim sampleLabelIG As String
+sampleLabelIG = "Reference Standard"
+
+Dim probeLabelIG As String
+probeLabelIG = "Probe set"
+
+Dim ratioLabelIG As String
+ratioLabelIG = "Ratio"
+
+Dim mfi1LabelIG As String
+mfi1LabelIG = "MFI1"
+
+Dim mfi2LabelIG As String
+mfi2LabelIG = "MFI2"
+
+'     '
+'Define Average Genotyping Variables'
+'     '
+Dim averageGenotypingSheet As String
+averageGenotypingSheet = "Genotipado Medias"
+
+Dim sampleLabelAG As String
+sampleLabelAG = "Reference Standard"
+
+Dim probeLabelAG As String
+probeLabelAG = "Probe Set"
+
+Dim ratioLabelAG As String
+ratioLabelAG = "Promedio Ratio"
+
+Dim mfi1LabelAG As String
+mfi1LabelAG = "Promedio MFI1"
+
+Dim mfi2LabelAG As String
+mfi2LabelAG = "Promedio MFI2"
+
+
+'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+'!!                                                                                              !!'
+'!!                                                                                              !!'
+'!!                DO NOT EDIT ANYTHING AFTER HERE                   !!'
+'!!                                                                                              !!'
+'!!                                                                                              !!'
+'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+
+'Fill Table 1'
+Dim u As Integer
+Dim sampleName As String
+
+For u = 57 To 61
+
+    sampleName = reportSheet.Cells(u, 4).Value
+
+    sampleStats = stats(averageTimeSheet, sampleName, 2, "", -1, 3)
+    reportSheet.Cells(u, 6).Value = sampleStats(1)
+    reportSheet.Cells(u, 7).Value = sampleStats(2)
+
+Next u
+
+
+'Fill Table 2'
+For u = 67 To 71
+
+    sampleName = reportSheet.Cells(u, 4).Value
+
+    mfi1Stats = stats(negativeControlTimeSheet, sampleName, 1, "", -1, 6)
+    mfi2Stats = stats(negativeControlTimeSheet, sampleName, 1, "", -1, 7)
+
+    If mfi1Stats(1) < mfi2Stats(1) Then
+        reportSheet.Cells(u, 6).Value = mfi1Stats(1)
+    Else
+        reportSheet.Cells(u, 6).Value = mfi2Stats(1)
+    End If
+
+    If mfi1Stats(2) > mfi2Stats(2) Then
+        reportSheet.Cells(u, 7).Value = mfi1Stats(2)
+    Else
+        reportSheet.Cells(u, 7).Value = mfi2Stats(2)
+    End If
+
+Next u
+
+'Fill The Rest...'
+
+'Get Number of Rows in Report Sheet'
+Dim nbRows As Integer
+nbRows = reportSheet.UsedRange.Rows.Count
+
+'Find all reference standard'
+Dim i As Integer
+For i = 75 To nbRows
+
+    'Element in first column: should be standard reference'
+    Dim referenceStandard As String
+    referenceStandard = reportSheet.Cells(i, 1)
+    
+    Dim continue As Boolean
+    continue = match(referencesStr, referenceStandard)
+    
+    If continue = True Then
+        'Found Reference'
+        
+        'Look for Probe'
+        Dim probeRaw  As String
+        probeRaw = reportSheet.Cells(i, 2)
+        Dim probe As String
+        probe = format(probeRaw)
+        
+        Dim sampleIndex As Integer
+        Dim probeIndex As Integer
+        Dim ratioIndex As Integer
+        Dim mfi1Index As Integer
+        Dim mfi2Index As Integer
+        
+        Dim sampleLabel As String
+        Dim probeLabel As String
+        Dim ratioLabel As String
+        Dim mfi1Label As String
+        Dim mfi2Label As String
+        
+        'Find Target Sheet'
+        Dim sheetName As String
+        
+        If i < individualAverageSeparation Then
+            sheetName = individualGenotypingSheet
+            sampleLabel = sampleLabelIG
+            probeLabel = probeLabelIG
+            ratioLabel = ratioLabelIG
+            mfi1Label = mfi1LabelIG
+            mfi2Label = mfi2LabelIG
+        Else
+            sheetName = averageGenotypingSheet
+            sampleLabel = sampleLabelAG
+            probeLabel = probeLabelAG
+            ratioLabel = ratioLabelAG
+            mfi1Label = mfi1LabelAG
+            mfi2Label = mfi2LabelAG
+        End If
+        
+        Set genotypingSheet = Worksheets(sheetName)
+        Dim nbColsGenotypingSheet As Integer
+        nbColsGenotypingSheet = genotypingSheet.UsedRange.Columns.Count
+            
+        'Find column index for each label'
+        Dim j As Integer
+        For j = 1 To nbColsGenotypingSheet
+            If genotypingSheet.Cells(1, j) = sampleLabel Then sampleIndex = j
+            If genotypingSheet.Cells(1, j) = probeLabel Then probeIndex = j
+            If genotypingSheet.Cells(1, j) = ratioLabel Then ratioIndex = j
+            If genotypingSheet.Cells(1, j) = mfi1Label Then mfi1Index = j
+            If genotypingSheet.Cells(1, j) = mfi2Label Then mfi2Index = j
+        Next j
+        
+        'Compute Stats for Each Target'
+        ratioStats = stats(sheetName, referenceStandard, sampleIndex, probe, probeIndex, ratioIndex)
+        mfi1Stats = stats(sheetName, referenceStandard, sampleIndex, probe, probeIndex, mfi1Index)
+        mfi2Stats = stats(sheetName, referenceStandard, sampleIndex, probe, probeIndex, mfi2Index)
+
+        'Put Stats Back in Right Location'
+        'MsgBox referenceStandard & vbNewLine & probe & vbNewLine & "ratioStats: " & ratioStats(1) & " -> " & ratioStats(2) & vbNewLine & "mfi1Stats: " & mfi1Stats(1) & " -> " & mfi1Stats(2) & vbNewLine & "mfi2Stats: " & mfi2Stats(1) & " -> " & mfi2Stats(2)'
+        'MFI1'
+        If reportSheet.Cells(i, 9).Value = "NA" Then
+            reportSheet.Cells(i, 3).Value = "-"
+            reportSheet.Cells(i, 4).Value = "-"
+        Else
+            reportSheet.Cells(i, 3).Value = mfi1Stats(1)
+            reportSheet.Cells(i, 4).Value = mfi1Stats(2)
+        End If
+
+        'MFI2'
+        If reportSheet.Cells(i, 10).Value = "NA" Then
+            reportSheet.Cells(i, 5).Value = "-"
+            reportSheet.Cells(i, 6).Value = "-"
+        Else
+            reportSheet.Cells(i, 5).Value = mfi2Stats(1)
+            reportSheet.Cells(i, 6).Value = mfi2Stats(2)
+        End If
+
+
+        'Ratio'
+        If reportSheet.Cells(i, 11).Value = "NA" Then
+            reportSheet.Cells(i, 7).Value = "-"
+        Else
+            reportSheet.Cells(i, 7).Value = ratioStats(1)
+        End If
+
+        If reportSheet.Cells(i, 12).Value = "NA" Then
+            reportSheet.Cells(i, 8).Value = "-"
+        Else
+            reportSheet.Cells(i, 8).Value = ratioStats(2)
+        End If
+        
+    Else
+        'Did not find Reference'
+    End If
+    
+Next i
+
+End Sub
+
+Function stats(worksheetName As String, referenceName As String, referenceIndex As Integer, probeName As String, probeIndex As Integer, targetIndex As Integer) As Variant
+
+        'Init Min and Max Values'targetIndex
+        Dim minMax(1 To 2) As Double
+        minMax(1) = 9999999
+        minMax(2) = -9999999
+        
+        Set sheet = Worksheets(worksheetName)
+        Dim nbRows As Integer
+        nbRows = sheet.UsedRange.Rows.Count
+        
+        'Compute Stats over all rows'
+        Dim k As Integer
+        For k = 1 To nbRows
+        
+            Dim continue As Boolean
+            continue = True
+            
+            'Get sample'
+            Dim sampleRaw  As String
+            sampleRaw = sheet.Cells(k, referenceIndex)
+            continue = match(sampleRaw, referenceName)
+            
+            'Get probe'
+            Dim probeRaw  As String
+            'Ignore the probe?'
+            If probeIndex >= 0 And continue = True Then
+                probeRaw = sheet.Cells(k, probeIndex)
+                continue = match(probeRaw, probeName)
+                
+            End If
+            
+            If continue = True Then
+'                MsgBox k & " - " & targetIndex
+                If minMax(1) > sheet.Cells(k, targetIndex) Then minMax(1) = sheet.Cells(k, targetIndex)
+                If minMax(2) < sheet.Cells(k, targetIndex) Then minMax(2) = sheet.Cells(k, targetIndex)
+            End If
+            
+        Next k
+        
+        stats = minMax
+        
+End Function
+Function match(stringRaw As String, stringReference As String) As Boolean
+    
+    Dim matching As Boolean
+    matching = False
+    
+    If Len(stringRaw) > 0 And Len(stringReference) > 0 Then
+        
+        'Split on ,'
+        Dim referencesA As Variant
+        referencesA = Split(stringRaw, ",")
+    
+        If UBound(Filter(referencesA, stringReference)) > -1 Then
+            matching = True
+        End If
+    
+        'Split on _'
+        referencesA = Split(stringRaw, "_")
+    
+        If UBound(Filter(referencesA, stringReference)) > -1 Then
+            matching = True
+        End If
+    
+         'Split on " " '
+        referencesA = Split(stringRaw, "_")
+    
+        If UBound(Filter(referencesA, stringReference)) > -1 Then
+            matching = True
+        End If
+    
+    End If
+    
+    match = matching
+    
+End Function
+
+Function format(stringRaw As String) As String
+    
+    Dim stringFormatted As String
+    
+    'If pass empty String warn user, else split on _ and " "'
+    If Len(stringRaw) > 0 Then
+        Dim stringArray() As String
+        stringArray = Split(stringRaw, "_")
+        stringArray = Split(stringArray(0), " ")
+        stringFormatted = stringArray(0)
+    Else
+        stringFormatted = ""
+    End If
+    
+    format = stringFormatted
+    
+End Function
+
