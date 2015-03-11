@@ -21,12 +21,12 @@
 '   Email: npm.rannou@gmail.com'
 '-----------------------------------------------------------------------------------'
 
-Sub FillTUVReport()
+Sub BatchReportTUV()
 
 'Define Global Variables'
 
 'Define Report Sheet'
-Set reportSheet = Worksheets("TÜV")
+Set reportSheet = Worksheets("BatchReport TÜV")
 
 'Define Target References'
 Dim referencesStr As String
@@ -36,7 +36,15 @@ referencesStr = "BCGEN712,BCGEN713,BCGEN714,NA22641,BCGEN742"
 
 'Individual vs Average Separation row'
 Dim individualAverageSeparation As Integer
-individualAverageSeparation = 236
+individualAverageSeparation = 163
+
+'End of sheet'
+Dim endOfSheet As Integer
+endOfSheet = 261
+
+'Epsilon for rounding'
+Dim epsilon As Double
+epsilon = 1e-06
 
 '     '
 'Define Average Time Variables'
@@ -105,48 +113,45 @@ mfi2LabelAG = "Promedio MFI2"
 Dim u As Integer
 Dim sampleName As String
 
-For u = 57 To 61
+For u = 52 To 56
 
-    sampleName = reportSheet.Cells(u, 4).Value
+    sampleName = reportSheet.Cells(u, 5).Value
 
     sampleStats = stats(averageTimeSheet, sampleName, 2, "", -1, 3)
-    reportSheet.Cells(u, 6).Value = sampleStats(1)
-    reportSheet.Cells(u, 7).Value = sampleStats(2)
+    reportSheet.Cells(u, 7).Value = sampleStats(1)
+    reportSheet.Cells(u, 8).Value = sampleStats(2)
 
 Next u
 
 
 'Fill Table 2'
-For u = 67 To 71
+Dim cnRow As Integer
+cnRow = 2
 
-    sampleName = reportSheet.Cells(u, 4).Value
+For u = 62 To 66
 
-    mfi1Stats = stats(negativeControlTimeSheet, sampleName, 1, "", -1, 6)
-    mfi2Stats = stats(negativeControlTimeSheet, sampleName, 1, "", -1, 7)
+    Set cnSheet = Worksheets(negativeControlTimeSheet)
+    ncMin = cnSheet.Cells(cnRow, 5).Value
+    cnRow = cnRow + 1
+    
+    ncMax = cnSheet.Cells(cnRow, 5).Value
+    cnRow = cnRow + 1
 
-    If mfi1Stats(1) < mfi2Stats(1) Then
-        reportSheet.Cells(u, 6).Value = mfi1Stats(1)
+    If ncMin < ncMax Then
+        reportSheet.Cells(u, 7).Value = Round(ncMin + epsilon, 0)
+        reportSheet.Cells(u, 8).Value = Round(ncMax + epsilon, 0)
     Else
-        reportSheet.Cells(u, 6).Value = mfi2Stats(1)
-    End If
-
-    If mfi1Stats(2) > mfi2Stats(2) Then
-        reportSheet.Cells(u, 7).Value = mfi1Stats(2)
-    Else
-        reportSheet.Cells(u, 7).Value = mfi2Stats(2)
+        reportSheet.Cells(u, 7).Value = Round(ncMax + epsilon, 0)
+        reportSheet.Cells(u, 8).Value = Round(ncMin + epsilon, 0)
     End If
 
 Next u
 
 'Fill The Rest...'
 
-'Get Number of Rows in Report Sheet'
-Dim nbRows As Integer
-nbRows = reportSheet.UsedRange.Rows.Count
-
 'Find all reference standard'
 Dim i As Integer
-For i = 75 To nbRows
+For i = 68 To endOfSheet
 
     'Element in first column: should be standard reference'
     Dim referenceStandard As String
@@ -217,35 +222,35 @@ For i = 75 To nbRows
         'Put Stats Back in Right Location'
         'MsgBox referenceStandard & vbNewLine & probe & vbNewLine & "ratioStats: " & ratioStats(1) & " -> " & ratioStats(2) & vbNewLine & "mfi1Stats: " & mfi1Stats(1) & " -> " & mfi1Stats(2) & vbNewLine & "mfi2Stats: " & mfi2Stats(1) & " -> " & mfi2Stats(2)'
         'MFI1'
-        If reportSheet.Cells(i, 9).Value = "NA" Then
+        If reportSheet.Cells(i, 9).Value = "-" Then
             reportSheet.Cells(i, 3).Value = "-"
             reportSheet.Cells(i, 4).Value = "-"
         Else
-            reportSheet.Cells(i, 3).Value = mfi1Stats(1)
-            reportSheet.Cells(i, 4).Value = mfi1Stats(2)
+            reportSheet.Cells(i, 3).Value = Round(mfi1Stats(1) + epsilon, 0)
+            reportSheet.Cells(i, 4).Value = Round(mfi1Stats(2) + epsilon, 0)
         End If
 
         'MFI2'
-        If reportSheet.Cells(i, 10).Value = "NA" Then
+        If reportSheet.Cells(i, 10).Value = "-" Then
             reportSheet.Cells(i, 5).Value = "-"
             reportSheet.Cells(i, 6).Value = "-"
         Else
-            reportSheet.Cells(i, 5).Value = mfi2Stats(1)
-            reportSheet.Cells(i, 6).Value = mfi2Stats(2)
+            reportSheet.Cells(i, 5).Value = Round(mfi2Stats(1) + epsilon, 0)
+            reportSheet.Cells(i, 6).Value = Round(mfi2Stats(2) + epsilon, 0)
         End If
 
 
         'Ratio'
-        If reportSheet.Cells(i, 11).Value = "NA" Then
+        If reportSheet.Cells(i, 11).Value = "-" Then
             reportSheet.Cells(i, 7).Value = "-"
         Else
-            reportSheet.Cells(i, 7).Value = ratioStats(1)
+            reportSheet.Cells(i, 7).Value = Round(ratioStats(1) + epsilon, 3)
         End If
 
-        If reportSheet.Cells(i, 12).Value = "NA" Then
+        If reportSheet.Cells(i, 12).Value = "-" Then
             reportSheet.Cells(i, 8).Value = "-"
         Else
-            reportSheet.Cells(i, 8).Value = ratioStats(2)
+            reportSheet.Cells(i, 8).Value = Round(ratioStats(2) + epsilon, 3)
         End If
         
     Else
@@ -308,24 +313,35 @@ Function match(stringRaw As String, stringReference As String) As Boolean
         
         'Split on ,'
         Dim referencesA As Variant
+        Dim index As Variant
+        
         referencesA = Split(stringRaw, ",")
+        index = UBound(Filter(referencesA, stringReference))
     
-        If UBound(Filter(referencesA, stringReference)) > -1 Then
-            matching = True
+        If index > -1 Then
+            If referencesA(index) = stringReference Then
+                matching = True
+            End If
         End If
     
         'Split on _'
         referencesA = Split(stringRaw, "_")
+        index = UBound(Filter(referencesA, stringReference))
     
-        If UBound(Filter(referencesA, stringReference)) > -1 Then
-            matching = True
+        If index > -1 Then
+            If referencesA(index) = stringReference Then
+                matching = True
+            End If
         End If
     
          'Split on " " '
         referencesA = Split(stringRaw, "_")
+        index = UBound(Filter(referencesA, stringReference))
     
-        If UBound(Filter(referencesA, stringReference)) > -1 Then
-            matching = True
+        If index > -1 Then
+            If referencesA(index) = stringReference Then
+                matching = True
+            End If
         End If
     
     End If
@@ -351,4 +367,3 @@ Function format(stringRaw As String) As String
     format = stringFormatted
     
 End Function
-
