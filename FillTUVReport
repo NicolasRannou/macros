@@ -133,7 +133,7 @@ For u = 62 To 66
     Set cnSheet = Worksheets(negativeControlTimeSheet)
     ncMin = cnSheet.Cells(cnRow, 5).Value
     cnRow = cnRow + 1
-    
+
     ncMax = cnSheet.Cells(cnRow, 5).Value
     cnRow = cnRow + 1
 
@@ -151,7 +151,7 @@ Next u
 
 'Find all reference standard'
 Dim i As Integer
-For i = 68 To endOfSheet
+For i = 74 To endOfSheet
 
     'Element in first column: should be standard reference'
     Dim referenceStandard As String
@@ -313,35 +313,45 @@ Function match(stringRaw As String, stringReference As String) As Boolean
         
         'Split on ,'
         Dim referencesA As Variant
+        Dim referencesFiltered As Variant
         Dim index As Variant
         
         referencesA = Split(stringRaw, ",")
-        index = UBound(Filter(referencesA, stringReference))
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
     
         If index > -1 Then
-            If referencesA(index) = stringReference Then
-                matching = True
-            End If
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
         End If
     
         'Split on _'
         referencesA = Split(stringRaw, "_")
-        index = UBound(Filter(referencesA, stringReference))
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
     
         If index > -1 Then
-            If referencesA(index) = stringReference Then
-                matching = True
-            End If
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
         End If
     
          'Split on " " '
         referencesA = Split(stringRaw, "_")
-        index = UBound(Filter(referencesA, stringReference))
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
     
         If index > -1 Then
-            If referencesA(index) = stringReference Then
-                matching = True
-            End If
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
         End If
     
     End If
@@ -367,3 +377,7 @@ Function format(stringRaw As String) As String
     format = stringFormatted
     
 End Function
+
+
+
+
