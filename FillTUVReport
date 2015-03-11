@@ -108,6 +108,14 @@ mfi2LabelAG = "Promedio MFI2"
 '!!                                                                                              !!'
 '!!                                                                                              !!'
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+'Dim yay As Boolean
+'yay = match("193,93", "93")
+'yay = match("193,123", "93")
+'yay = match("93", "193")
+'yay = match("abc_def", "abc")
+'yay = match("abc_def", "def")
+'yay = match("abc def", "abc")
+'yay = match("asd def", "abc")
 
 'Fill Table 1'
 Dim u As Integer
@@ -342,7 +350,7 @@ Function match(stringRaw As String, stringReference As String) As Boolean
         End If
     
          'Split on " " '
-        referencesA = Split(stringRaw, "_")
+        referencesA = Split(stringRaw, " ")
         referencesFiltered = Filter(referencesA, stringReference)
         index = UBound(referencesFiltered)
     
@@ -377,6 +385,7 @@ Function format(stringRaw As String) As String
     format = stringFormatted
     
 End Function
+
 
 
 
