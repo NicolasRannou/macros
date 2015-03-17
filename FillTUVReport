@@ -26,7 +26,7 @@ Sub BatchReportTUV()
 'Define Global Variables'
 
 'Define Report Sheet'
-Set reportSheet = Worksheets("BatchReport TÜV")
+Set reportSheet = ThisWorkbook.Worksheets("BatchReport TUV")
 
 'Define Target References'
 Dim referencesStr As String
@@ -108,14 +108,6 @@ mfi2LabelAG = "Promedio MFI2"
 '!!                                                                                              !!'
 '!!                                                                                              !!'
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-'Dim yay As Boolean
-'yay = match("193,93", "93")
-'yay = match("193,123", "93")
-'yay = match("93", "193")
-'yay = match("abc_def", "abc")
-'yay = match("abc_def", "def")
-'yay = match("abc def", "abc")
-'yay = match("asd def", "abc")
 
 'Fill Table 1'
 Dim u As Integer
@@ -138,7 +130,7 @@ cnRow = 2
 
 For u = 62 To 66
 
-    Set cnSheet = Worksheets(negativeControlTimeSheet)
+    Set cnSheet = ThisWorkbook.Worksheets(negativeControlTimeSheet)
     ncMin = cnSheet.Cells(cnRow, 5).Value
     cnRow = cnRow + 1
 
@@ -146,11 +138,29 @@ For u = 62 To 66
     cnRow = cnRow + 1
 
     If ncMin < ncMax Then
-        reportSheet.Cells(u, 7).Value = Round(ncMin + epsilon, 0)
-        reportSheet.Cells(u, 8).Value = Round(ncMax + epsilon, 0)
+        If IsNumeric(ncMin) Then
+            reportSheet.Cells(u, 7).Value = Round(ncMin + epsilon, 0)
+        Else
+            reportSheet.Cells(u, 7).Value = "Wrong value: " & ncMin
+        End If
+        
+        If IsNumeric(ncMax) Then
+            reportSheet.Cells(u, 8).Value = Round(ncMax + epsilon, 0)
+        Else
+            reportSheet.Cells(u, 8).Value = "Wrong value: " & ncMax
+        End If
     Else
-        reportSheet.Cells(u, 7).Value = Round(ncMax + epsilon, 0)
-        reportSheet.Cells(u, 8).Value = Round(ncMin + epsilon, 0)
+        If IsNumeric(ncMin) Then
+            reportSheet.Cells(u, 8).Value = Round(ncMin + epsilon, 0)
+        Else
+            reportSheet.Cells(u, 8).Value = "Wrong value: " & ncMin
+        End If
+        
+        If IsNumeric(ncMax) Then
+            reportSheet.Cells(u, 7).Value = Round(ncMax + epsilon, 0)
+        Else
+            reportSheet.Cells(u, 7).Value = "Wrong value: " & ncMax
+        End If
     End If
 
 Next u
@@ -208,7 +218,7 @@ For i = 74 To endOfSheet
             mfi2Label = mfi2LabelAG
         End If
         
-        Set genotypingSheet = Worksheets(sheetName)
+        Set genotypingSheet = ThisWorkbook.Worksheets(sheetName)
         Dim nbColsGenotypingSheet As Integer
         nbColsGenotypingSheet = genotypingSheet.UsedRange.Columns.Count
             
@@ -221,6 +231,13 @@ For i = 74 To endOfSheet
             If genotypingSheet.Cells(1, j) = mfi1Label Then mfi1Index = j
             If genotypingSheet.Cells(1, j) = mfi2Label Then mfi2Index = j
         Next j
+        
+        'Hack to replace BCGEN742 by MuestraPS193 in the lookup of Genotipado Medios'
+        If i >= individualAverageSeparation Then
+           If referenceStandard = "BCGEN742" Then
+               referenceStandard = "MuestraPS193"
+           End If
+        End If
         
         'Compute Stats for Each Target'
         ratioStats = stats(sheetName, referenceStandard, sampleIndex, probe, probeIndex, ratioIndex)
@@ -276,7 +293,7 @@ Function stats(worksheetName As String, referenceName As String, referenceIndex 
         minMax(1) = 9999999
         minMax(2) = -9999999
         
-        Set sheet = Worksheets(worksheetName)
+        Set sheet = ThisWorkbook.Worksheets(worksheetName)
         Dim nbRows As Integer
         nbRows = sheet.UsedRange.Rows.Count
         
@@ -385,6 +402,8 @@ Function format(stringRaw As String) As String
     format = stringFormatted
     
 End Function
+
+
 
 
 

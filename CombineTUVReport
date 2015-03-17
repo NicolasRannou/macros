@@ -1,0 +1,257 @@
+'-----------------------------------------------------------------------------------'
+'   Copyright (c) 2015 Nicolas Rannou'
+''
+'   Permission is hereby granted, free of charge, to any person obtaining a copy of this software'
+'   and associated documentation files (the "Software"), to deal in the Software without restriction,'
+'   including without limitation the rights to use, copy, modify, merge, publish, distribute,'
+'   sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is '
+'   furnished to do so, subject to the following conditions:'
+''
+'   The above copyright notice and this permission notice shall be included in all copies or substantial'
+'   portions of the Software.'
+''
+'   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,'
+'   INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR'
+'   PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE'
+'   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR'
+'   OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER'
+'   DEALINGS IN THE SOFTWARE.'
+''
+'   Original Author: Nicolas Rannou'
+'   Email: npm.rannou@gmail.com'
+'-----------------------------------------------------------------------------------'
+
+Sub CombinedReportTUV()
+
+'Define Global Variables'
+
+'Define Report Sheet'
+Set reportSheet = ThisWorkbook.Worksheets("CombinedReport TUV")
+Set currentSheet = ThisWorkbook.Worksheets("BatchReport TUV")
+
+'Define Target References'acrosd
+Dim referencesStr As String
+referencesStr = "BCGEN712,BCGEN713,BCGEN714,NA22641,BCGEN742"
+
+'Start of sheet'
+Dim startOfSheet As Integer
+startOfSheet = 74
+
+'End of sheet'
+Dim endOfSheet As Integer
+endOfSheet = 261
+
+'Epsilon for rounding'
+Dim epsilon As Double
+epsilon = 1e-06
+
+'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+'!!                                                                                              !!'
+'!!                                                                                              !!'
+'!!                DO NOT EDIT ANYTHING AFTER HERE                   !!'
+'!!                                                                                              !!'
+'!!                                                                                              !!'
+'!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+
+'Get current file name'
+Dim currentWorkbook As String
+currentWorkbook = ThisWorkbook.Name
+
+'Get other file name'
+Dim targetWorkbook As String
+Dim stringArray() As String
+stringArray = Split(currentWorkbook, "_")
+
+If stringArray(2) = "ALF" Then
+    targetWorkbook = stringArray(0) & "_" & stringArray(1) & "_" & "ALP" & "_" & stringArray(3) & "_" & stringArray(4)
+Else
+    targetWorkbook = stringArray(0) & "_" & stringArray(1) & "_" & "ALF" & "_" & stringArray(3) & "_" & stringArray(4)
+End If
+
+Dim twb As Workbook
+Set twb = Workbooks.Open(targetWorkbook)
+Set targetSheet = twb.Worksheets("BatchReport TUV")
+
+'Fill Table 1'
+Dim u As Integer
+Dim sampleName As String
+
+For u = 52 To 56
+
+        'Average time min'
+        If currentSheet.Cells(u, 7).Value < targetSheet.Cells(u, 7).Value Then
+            reportSheet.Cells(u, 7).Value = currentSheet.Cells(u, 7).Value
+        Else
+            reportSheet.Cells(u, 7).Value = targetSheet.Cells(u, 7).Value
+        End If
+        
+        'Average time max'
+        If currentSheet.Cells(u, 8).Value > targetSheet.Cells(u, 8).Value Then
+            reportSheet.Cells(u, 8).Value = currentSheet.Cells(u, 8).Value
+        Else
+            reportSheet.Cells(u, 8).Value = targetSheet.Cells(u, 8).Value
+        End If
+
+Next u
+
+
+'Fill Table 2'
+For u = 62 To 66
+
+            'Average MFI min'
+        If currentSheet.Cells(u, 7).Value < targetSheet.Cells(u, 7).Value Then
+            reportSheet.Cells(u, 7).Value = currentSheet.Cells(u, 7).Value
+        Else
+            reportSheet.Cells(u, 7).Value = targetSheet.Cells(u, 7).Value
+        End If
+        
+        'Average MFI max'
+        If currentSheet.Cells(u, 8).Value > targetSheet.Cells(u, 8).Value Then
+            reportSheet.Cells(u, 8).Value = currentSheet.Cells(u, 8).Value
+        Else
+            reportSheet.Cells(u, 8).Value = targetSheet.Cells(u, 8).Value
+        End If
+
+Next u
+
+'Find all reference standard'
+Dim i As Integer
+For i = startOfSheet To endOfSheet
+
+    'Element in first column: should be standard reference'
+    Dim referenceStandard As String
+    referenceStandard = reportSheet.Cells(i, 1)
+    
+    Dim continue As Boolean
+    continue = match(referencesStr, referenceStandard)
+    
+    If continue = True Then
+        'MFI1 min'
+        If currentSheet.Cells(i, 3).Value < targetSheet.Cells(i, 3).Value Then
+            reportSheet.Cells(i, 3).Value = currentSheet.Cells(i, 3).Value
+        Else
+            reportSheet.Cells(i, 3).Value = targetSheet.Cells(i, 3).Value
+        End If
+        
+        'MFI1 max'
+        If currentSheet.Cells(i, 4).Value > targetSheet.Cells(i, 4).Value Then
+            reportSheet.Cells(i, 4).Value = currentSheet.Cells(i, 4).Value
+        Else
+            reportSheet.Cells(i, 4).Value = targetSheet.Cells(i, 4).Value
+        End If
+        
+        'MFI2 min'
+        If currentSheet.Cells(i, 5).Value < targetSheet.Cells(i, 5).Value Then
+            reportSheet.Cells(i, 5).Value = currentSheet.Cells(i, 5).Value
+        Else
+            reportSheet.Cells(i, 5).Value = targetSheet.Cells(i, 5).Value
+        End If
+        
+        'MFI2 max'
+        If currentSheet.Cells(i, 6).Value > targetSheet.Cells(i, 6).Value Then
+            reportSheet.Cells(i, 6).Value = currentSheet.Cells(i, 6).Value
+        Else
+            reportSheet.Cells(i, 6).Value = targetSheet.Cells(i, 6).Value
+        End If
+        
+        'Ratio min'
+        If currentSheet.Cells(i, 7).Value < targetSheet.Cells(i, 7).Value Then
+            reportSheet.Cells(i, 7).Value = currentSheet.Cells(i, 7).Value
+        Else
+            reportSheet.Cells(i, 7).Value = targetSheet.Cells(i, 7).Value
+        End If
+        
+        'Ratio max'
+        If currentSheet.Cells(i, 8).Value > targetSheet.Cells(i, 8).Value Then
+            reportSheet.Cells(i, 8).Value = currentSheet.Cells(i, 8).Value
+        Else
+            reportSheet.Cells(i, 8).Value = targetSheet.Cells(i, 8).Value
+        End If
+        
+    End If
+    
+Next i
+
+End Sub
+
+Function match(stringRaw As String, stringReference As String) As Boolean
+    
+    Dim matching As Boolean
+    matching = False
+    
+    If Len(stringRaw) > 0 And Len(stringReference) > 0 Then
+        
+        'Split on ,'
+        Dim referencesA As Variant
+        Dim referencesFiltered As Variant
+        Dim index As Variant
+        
+        referencesA = Split(stringRaw, ",")
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
+    
+        If index > -1 Then
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
+        End If
+    
+        'Split on _'
+        referencesA = Split(stringRaw, "_")
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
+    
+        If index > -1 Then
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
+        End If
+    
+         'Split on " " '
+        referencesA = Split(stringRaw, " ")
+        referencesFiltered = Filter(referencesA, stringReference)
+        index = UBound(referencesFiltered)
+    
+        If index > -1 Then
+            For Each element In referencesFiltered
+                If element = stringReference Then
+                    matching = True
+                End If
+            Next element
+        End If
+    
+    End If
+    
+    match = matching
+    
+End Function
+
+Function format(stringRaw As String) As String
+    
+    Dim stringFormatted As String
+    
+    'If pass empty String warn user, else split on _ and " "'
+    If Len(stringRaw) > 0 Then
+        Dim stringArray() As String
+        stringArray = Split(stringRaw, "_")
+        stringArray = Split(stringArray(0), " ")
+        stringFormatted = stringArray(0)
+    Else
+        stringFormatted = ""
+    End If
+    
+    format = stringFormatted
+    
+End Function
+
+
+
+
+
+
+
+
